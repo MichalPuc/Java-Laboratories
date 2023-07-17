@@ -1,0 +1,241 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>pl.edu.pwr.tkubik.javata</groupId>
+    <artifactId>MyJavaFXScripting</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <javafx.version>17.0.6</javafx.version>
+        <graalvm.version>22.2.0</graalvm.version>
+        <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+        <compiler.dir>${project.build.directory}\compiler</compiler.dir>
+        <java.version>17</java.version>
+    </properties>
+
+
+    <profiles>
+        <profile>
+            <id>jdk17</id>
+            <activation>
+                <jdk>[17,</jdk>
+            </activation>
+            <!--            <repositories>-->
+            <!--                <repository>-->
+            <!--                    <id>central</id>-->
+            <!--                    <name>Maven Central</name>-->
+            <!--                    <url>https://repo.maven.apache.org/maven2/</url>-->
+            <!--                </repository>-->
+            <!--            </repositories>-->
+            <dependencies>
+                <!--                <dependency>-->
+                <!--                    <groupId>org.apache.maven.plugins</groupId>-->
+                <!--                    <artifactId>maven-compiler-plugin</artifactId>-->
+                <!--                    <version>3.11.0</version>-->
+                <!--                </dependency>-->
+                <!--                <dependency>-->
+                <!--                    <groupId>org.apache.maven.plugins</groupId>-->
+                <!--                    <artifactId>maven-surefire-plugin</artifactId>-->
+                <!--                    <version>3.1.0</version>-->
+                <!--                </dependency>-->
+                <dependency>
+                    <groupId>org.graalvm.sdk</groupId>
+                    <artifactId>graal-sdk</artifactId>
+                    <version>${graalvm.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.graalvm.js</groupId>
+                    <artifactId>js</artifactId>
+                    <version>${graalvm.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.graalvm.js</groupId>
+                    <artifactId>js-scriptengine</artifactId>
+                    <version>${graalvm.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.graalvm.tools</groupId>
+                    <artifactId>profiler</artifactId>
+                    <version>${graalvm.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.graalvm.tools</groupId>
+                    <artifactId>chromeinspector</artifactId>
+                    <version>${graalvm.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.10</version>
+                        <executions>
+                            <execution>
+                                <id>copy</id>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.graalvm.compiler</groupId>
+                                            <artifactId>compiler</artifactId>
+                                            <version>${graalvm.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>true</overWrite>
+                                            <destFileName>compiler.jar</destFileName>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.graalvm.compiler</groupId>
+                                            <artifactId>compiler-management</artifactId>
+                                            <version>${graalvm.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>true</overWrite>
+                                            <destFileName>compiler-management.jar</destFileName>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.graalvm.truffle</groupId>
+                                            <artifactId>truffle-api</artifactId>
+                                            <version>${graalvm.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>true</overWrite>
+                                            <destFileName>truffle-api.jar</destFileName>
+                                        </artifactItem>
+                                        <artifactItem>
+                                            <groupId>org.graalvm.sdk</groupId>
+                                            <artifactId>graal-sdk</artifactId>
+                                            <version>${graalvm.version}</version>
+                                            <type>jar</type>
+                                            <overWrite>true</overWrite>
+                                            <destFileName>graal-sdk.jar</destFileName>
+                                        </artifactItem>
+                                    </artifactItems>
+                                    <outputDirectory>${compiler.dir}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>default-cli</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>
+                                        <argument>-classpath</argument>
+                                        <!-- automatically creates the classpath using all project dependencies, also adding the project build directory -->
+                                        <classpath/>
+                                        <argument>--module-path</argument>
+                                        <!-- automatically creates the modulepath using all project dependencies, also adding the project build directory -->
+                                        <modulepath/>
+                                        <argument>-Djavafx.allowjs=true</argument>
+                                        <argument>-XX:+UnlockExperimentalVMOptions</argument>
+                                        <argument>-XX:+EnableJVMCI</argument>
+                                        <argument>--upgrade-module-path=${compiler.dir}/compiler.jar${path.separator}${compiler.dir}/compiler-management.jar</argument>
+                                        <argument>-Dpolyglot.js.nashorn-compat=true</argument>
+                                        <!--                                        <argument>-Dpolyglot.js.allowAllAccess=true</argument>-->
+                                        <!--                                        <argument>-Dpolyglot.js.allowHostClassLookup=true</argument>-->
+                                        <!--                                        <argument>polyglot.js.allowHostClassLoading=true</argument>-->
+                                        <argument>--module</argument> <!-- or -m -->
+                                        <argument>pl.edu.pwr.tkubik.javata/pl.edu.pwr.tkubik.javata.Main</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>nograalcompiler</id>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>
+                                        <argument>--module-path</argument>
+                                        <!-- automatically creates the modulepath using all project dependencies, also adding the project build directory -->
+                                        <modulepath/>
+                                        <argument>-classpath</argument>
+                                        <!-- automatically creates the classpath using all project dependencies, also adding the project build directory -->
+                                        <classpath/>
+                                        <argument>-Djavafx.allowjs=true</argument>
+                                        <argument>-Dpolyglot.js.nashorn-compat=true</argument>
+                                        <argument>-Dpolyglot.engine.WarnInterpreterOnly=false</argument>
+                                        <argument>--module</argument> <!-- or -m -->
+                                        <argument>pl.edu.pwr.tkubik.javata/pl.edu.pwr.tkubik.javata.Main</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <executable>${JAVA_HOME}/bin/java</executable>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>org.graalvm.sdk</groupId>-->
+<!--            <artifactId>graal-sdk</artifactId>-->
+<!--            <version>${graalvm.version}</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js</artifactId>
+            <version>${graalvm.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.js</groupId>
+            <artifactId>js-scriptengine</artifactId>
+            <version>${graalvm.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.graalvm.tools</groupId>-->
+<!--            <artifactId>profiler</artifactId>-->
+<!--            <version>${graalvm.version}</version>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.graalvm.tools</groupId>-->
+<!--            <artifactId>chromeinspector</artifactId>-->
+<!--            <version>${graalvm.version}</version>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+
+                <configuration>
+                    <release>17</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+<!-- najpierw mvn test, potem mvn exec:exec-->

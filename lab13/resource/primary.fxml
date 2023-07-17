@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?language javascript?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.time.LocalDateTime?>
+<?import java.time.format.DateTimeFormatter?>
+
+<?import java.lang.String?>
+<VBox fx:id="vbox" prefHeight="400.0" prefWidth="400.0" spacing="0" xmlns:fx="http://javafx.com/fxml/1"
+      xmlns="http://javafx.com/javafx/2.2">
+   <fx:script>
+      var System = Java.type("java.lang.System")
+      var packages = new JavaImporter(java.nio.file.Path, java.nio.file.Files, java.lang.String, java.lang.StringBuilder, java.util.stream.Stream, java.nio.charset.StandardCharsets)
+      var LocalDateTime = Java.type('java.time.LocalDateTime');
+      var DateTimeFormatter = Java.type('java.time.format.DateTimeFormatter');
+
+
+
+      function buttonAction(event, generatedEntryArea) {
+         var selectedTemplateText = '0';
+         var selectedTemplate = templateChoiceBox.getValue();
+         with (packages) {
+            // Tworzenie ścieżki do wybranego szablonu
+            var path = Path.of("C:\\Users\\micha\\Desktop\\TT\\MyJavaFXScripting\\src\\main\\resources\\pl\\edu\\pwr\\tkubik\\javata\\templates\\" + selectedTemplate+".txt");
+            // Wczytywanie zawartości szablonu
+            var text = Files.readString(path);
+            selectedTemplateText = text;
+            generatedEntryArea.setText(selectedTemplateText);
+         }
+      }
+
+      function saveTemplate(event,templateChoiceBox,generatedEntryArea)
+      {
+         var selectedTemplate = templateChoiceBox.getValue();
+         var updatedTemplateText = generatedEntryArea.getText();
+
+         // Pobranie aktualnej daty i czasu
+         var dateTime = LocalDateTime.now();
+
+         // Formatowanie daty i czasu do postaci "yyyy-MM-dd_HH-mm-ss"
+         var formattedDateTime = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+
+         // Utworzenie nazwy pliku z wykorzystaniem sformatowanej daty i czasu
+         var fileName = formattedDateTime + ".txt";
+
+         with (packages) {
+            // Tworzenie ścieżki do zapisu szablonu
+            var path = Path.of("C:\\Users\\micha\\Desktop\\TT\\MyJavaFXScripting\\diary\\" + fileName);
+
+            // Zapisywanie zaktualizowanego szablonu do pliku
+            Files.write(path, updatedTemplateText.getBytes(StandardCharsets.UTF_8));
+         }
+      }
+
+   </fx:script>
+
+   <children>
+      <HBox spacing="10">
+         <ChoiceBox fx:id="templateChoiceBox" onAction="buttonAction(event,generatedEntryArea)">
+            <items>
+               <FXCollections fx:factory="observableArrayList">
+                  <String fx:value="Wydarzenie" />
+                  <String fx:value="Wdzięczność" />
+                  <String fx:value="Cytat" />
+               </FXCollections>
+            </items>
+         </ChoiceBox>
+      </HBox>
+
+
+      <Button text="Save Template" onAction="saveTemplate(event,templateChoiceBox,generatedEntryArea)" />
+
+      <TextArea fx:id="generatedEntryArea" prefHeight="200.0" prefWidth="400.0" />
+
+   </children>
+</VBox>

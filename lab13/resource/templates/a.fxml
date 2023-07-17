@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?language javascript?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.FXCollections?>
+
+<VBox fx:id="vbox" prefHeight="400.0" prefWidth="400.0" spacing="0" xmlns:fx="http://javafx.com/fxml/1"
+      xmlns="http://javafx.com/javafx/2.2">
+    <fx:script>
+        var packages = new JavaImporter(java.nio.file.Path, java.nio.file.Files, java.lang.String, java.lang.StringBuilder, java.util.stream.Stream, java.nio.charset.StandardCharsets);
+        var templates = [
+            'template1.txt',
+            'template2.txt',
+            'template3.txt'
+        ];
+
+        function generateEntry() {
+            var selectedTemplate = templateComboBox.getValue();
+
+            with (packages) {
+                var path = Path.of("path/to/templates/" + selectedTemplate);
+
+                var text = Files.readString(path);
+                var generatedEntry = text;
+
+                // Replace placeholders with user-provided attributes
+                var attributeFields = attributesContainer.getChildren();
+
+                var attributeLabel = attributeFields[0];
+                var attributeField = attributeFields[1];
+
+                var attributeName = attributeLabel.getText();
+                var attributeValue = attributeField.getText();
+
+                generatedEntry = generatedEntry.replace("{" + attributeName + "}", attributeValue);
+
+                generatedEntryArea.setText(generatedEntry);
+            }
+        }
+
+        function loadTemplates() {
+            // Load templates from configuration files
+            var loadedTemplates = [
+                { name: "Template 1", file: "template1.txt" },
+                { name: "Template 2", file: "template2.txt" },
+                { name: "Template 3", file: "template3.txt" }
+            ];
+
+            // Add templates to the ComboBox
+            loadedTemplates.forEach(function(template) {
+                templateComboBox.getItems().add(template.name);
+            });
+
+
+            // Set the initial value of the ComboBox
+            templateComboBox.setValue(loadedTemplates[0].name);
+        }
+
+        function addAttribute() {
+            var attributeLabel = new javafx.scene.control.Label();
+            attributeLabel.textProperty().bind(attributeField.textProperty());
+
+            var attributeField = new javafx.scene.control.TextField();
+
+            var attributeBox = new HBox();
+            attributeBox.getChildren().addAll(attributeLabel, attributeField);
+            attributesContainer.getChildren().add(attributeBox);
+        }
+    </fx:script>
+
+    <children>
+        <ComboBox fx:id="templateComboBox" promptText="Select Template">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <!-- Templates will be loaded dynamically -->
+                </FXCollections>
+            </items>
+        </ComboBox>
+
+        <Button text="Add Attribute" onAction="addAttribute()" />
+
+        <VBox fx:id="attributesContainer">
+            <!-- Attributes will be added dynamically -->
+        </VBox>
+
+        <Button text="Generate Entry" onAction="generateEntry()" />
+
+        <TextArea fx:id="generatedEntryArea" prefHeight="200.0" prefWidth="400.0" />
+
+    </children>
+</VBox>
